@@ -46,7 +46,7 @@ export default function LoginPage({ initialRole }: { initialRole: string }) {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="card w-full max-w-md">
-        <Link href="/" className="text-teal-700 font-semibold text-sm">Back to home</Link>
+        <Link href="/" className="text-green-700 font-semibold text-sm">Back to home</Link>
         <h1 className="text-2xl font-bold mt-3">Login to M-Park</h1>
         <div className="flex gap-2 mt-4">
           <button onClick={() => setRole("customer")} className={role === "customer" ? "btn-primary flex-1" : "btn-secondary flex-1"}>Customer</button>
@@ -66,7 +66,7 @@ export default function LoginPage({ initialRole }: { initialRole: string }) {
           <form onSubmit={requestOtp} className="mt-5 space-y-4">
             <div><label className="label">Mobile number</label><input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+92 300 0000000" required /></div>
             <button className="btn-primary w-full" type="submit">Send OTP</button>
-            <p className="text-slate-500 text-sm">No account yet? <Link href="/register" className="text-teal-700 font-semibold">Register your vehicle</Link></p>
+            <p className="text-slate-500 text-sm">No account yet? <Link href="/register" className="text-green-700 font-semibold">Register your vehicle</Link></p>
           </form>
         ) : (
           <form onSubmit={verifyOtp} className="mt-5 space-y-4">

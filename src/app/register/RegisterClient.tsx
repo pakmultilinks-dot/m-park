@@ -54,7 +54,7 @@ export default function RegisterClient({ plans }: { plans: Plan[] }) {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="card w-full max-w-lg">
-        <Link href="/" className="text-teal-700 font-semibold text-sm">Back to home</Link>
+        <Link href="/" className="text-green-700 font-semibold text-sm">Back to home</Link>
         <h1 className="text-2xl font-bold mt-3">Register your vehicle</h1>
         <p className="text-slate-600 text-sm mt-1">Step {step} of 3: {step === 1 ? "Verify your QR code" : step === 2 ? "Vehicle and owner details" : "Verify your mobile with OTP"}</p>
         {error && <p className="bg-red-50 text-red-700 border border-red-200 rounded-lg px-3 py-2 mt-4 text-sm">{error}</p>}
