@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M-Park Admin Dashboard</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="topbar"><b>M-Park Admin</b><button type="button" onclick="toggleSidebar()">Menu</button></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-logo">MP</div><div><b>M-Park</b><span>Admin Dashboard</span></div></div>
+    <div class="nav-label">Admin</div>
+    <button class="nav-item active" data-page="overview" onclick="showPage('overview')"><span class="ico">◈</span> Overview</button>
+    <button class="nav-item" data-page="customers" onclick="showPage('customers')"><span class="ico">👤</span> Customers</button>
+    <button class="nav-item" data-page="vehicles" onclick="showPage('vehicles')"><span class="ico">🚗</span> Vehicles</button>
+    <button class="nav-item" data-page="qrcodes" onclick="showPage('qrcodes')"><span class="ico">▦</span> QR Codes</button>
+    <button class="nav-item" data-page="inventory" onclick="showPage('inventory')"><span class="ico">📦</span> QR Inventory</button>
+    <button class="nav-item" data-page="requests" onclick="showPage('requests')"><span class="ico">✉</span> Contact Requests</button>
+    <button class="nav-item" data-page="notifications" onclick="showPage('notifications')"><span class="ico">🔔</span> Notifications</button>
+    <button class="nav-item" data-page="subscriptions" onclick="showPage('subscriptions')"><span class="ico">💳</span> Subscriptions</button>
+    <button class="nav-item" data-page="settings" onclick="showPage('settings')"><span class="ico">⚙</span> Settings</button>
+    <div class="nav-label">Links</div>
+    <button class="nav-item" onclick="location.href='../index.html'"><span class="ico">⌂</span> Home</button>
+    <button class="nav-item" onclick="location.href='../customer/index.html'"><span class="ico">→</span> Customer Dashboard</button>
+    <div class="sidebar-foot">Logged in as<br><b style="color:#fff">M-Park Owner</b><br>Single owner account<br><br><span class="demo-badge">Demo Data</span></div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head"><div><span class="demo-badge">Demo Data - No real payments or SMS</span><h1 id="pageTitle">Overview</h1><p class="muted" id="pageSub">All users, vehicles, QR codes and subscriptions at a glance.</p></div><button class="btn secondary" onclick="resetDemo()">Reset demo data</button></div>
+
+    <section class="page active" id="page-overview">
+      <div class="grid grid-4" id="overviewStats"></div>
+      <div class="space"></div>
+      <div class="grid grid-2">
+        <div class="card"><h2>Recent registrations</h2><div id="recentRegs"></div></div>
+        <div class="card"><h2>Recent scans and requests</h2><div id="recentScans"></div></div>
+      </div>
+      <div class="space"></div>
+      <div class="card"><h2>Subscription snapshot</h2><div id="subSnapshot"></div></div>
+    </section>
+
+    <section class="page" id="page-customers">
+      <div class="card">
+        <div class="toolbar"><input class="search" id="customerSearch" placeholder="Search name, phone or plate" oninput="renderCustomers()"><select id="statusFilter" onchange="renderCustomers()"><option value="">All statuses</option><option>Active</option><option>Blocked</option><option>Expired</option></select><button class="btn" onclick="openAddCustomer()">+ Add Customer</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Customer</th><th>Vehicle</th><th>QR Code</th><th>Plan</th><th>Status</th><th>Actions</th></tr></thead><tbody id="customerRows"></tbody></table></div>
+        <p class="muted small" id="customerCount"></p>
+      </div>
+    </section>
+
+    <section class="page" id="page-vehicles">
+      <div class="card"><h2>Registered vehicles</h2><p class="muted small">Every vehicle registered through the Registration Portal.</p><div class="table-wrap"><table><thead><tr><th>Plate</th><th>Vehicle</th><th>Owner</th><th>QR Code</th><th>Status</th></tr></thead><tbody id="vehicleRows"></tbody></table></div></div>
+    </section>
+
+    <section class="page" id="page-qrcodes">
+      <div class="card"><h2>QR codes</h2><p class="muted small">One custom QR code for every customer. Scan URL format: https://m-park.example/scan/MPK-1001</p><div class="table-wrap"><table><thead><tr><th>QR Code</th><th>Plate</th><th>Owner</th><th>Status</th><th>Last scan</th><th>Actions</th></tr></thead><tbody id="qrRows"></tbody></table></div></div>
+    </section>
+
+    <section class="page" id="page-inventory">
+      <div class="card">
+        <div class="toolbar"><h2 style="margin:0;flex:1">QR sticker inventory</h2><button class="btn" onclick="generateBatch()">+ Generate new batch (50 codes)</button></div>
+        <p class="muted small">Printed stickers waiting to be assigned, assigned stickers, and stock on hand. Generating a batch only adds demo codes in this browser.</p>
+        <div class="grid grid-4" id="inventoryStats" style="margin-bottom:16px"></div>
+        <div class="table-wrap"><table><thead><tr><th>Batch</th><th>Code range</th><th>Total</th><th>Assigned</th><th>Unassigned</th><th>Status</th></tr></thead><tbody id="inventoryRows"></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-requests">
+      <div class="card"><h2>Contact requests</h2><p class="muted small">Requests from people who scanned a sticker and asked to contact the owner.</p><div id="requestList"></div></div>
+    </section>
+
+    <section class="page" id="page-notifications">
+      <div class="card"><div class="toolbar"><h2 style="margin:0;flex:1">Notifications monitoring</h2><button class="btn secondary" onclick="markAllRead()">Mark all as read</button></div><div id="notificationList"></div></div>
+    </section>
+
+    <section class="page" id="page-subscriptions">
+      <p class="muted">Demo plans in PKR. Prices are placeholders. The client has not confirmed real plan prices yet. Edit a price and save it, it is stored in this browser only.</p>
+      <div class="grid grid-3" id="planCards"></div>
+      <div class="space"></div>
+      <div class="card"><h2>Subscribers by plan</h2><div id="planTable"></div></div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="card"><h2>Settings</h2>
+        <label>Business name</label><input id="setBusiness" value="M-Park">
+        <label>Support phone</label><input id="setPhone" value="+92 300 0000000">
+        <label>Scan page message</label><textarea id="setMessage" rows="3">This car is protected by M-Park. Scan to contact the owner.</textarea>
+        <label><input type="checkbox" id="setOtp" checked style="width:auto"> Show owner phone only after scanner OTP verification</label>
+        <label><input type="checkbox" id="setEmergency" checked style="width:auto"> Emergency contact is required in registration</label>
+        <div class="space"></div>
+        <button class="btn" onclick="saveSettings()">Save settings</button>
+        <button class="btn secondary" onclick="resetDemo()">Reset demo data</button>
+        <p class="muted small" id="settingsSaved"></p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modalBox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+var KEY = 'mpark_admin_v1';
+function defaultData() {
+  return {
+    customers: [
+      {id:1,name:'Ahmed Raza',phone:'+92 300 1234567',plate:'LEA-24-1234',vehicle:'Toyota Corolla 2022, White',qr:'MPK-1001',qrStatus:'Active',plan:'Monthly',planPrice:499,status:'Active',joined:'2026-11-10',lastScan:'2026-11-19 10:15'},
+      {id:2,name:'Ayesha Khan',phone:'+92 321 7654321',plate:'ISB-22-5678',vehicle:'Honda Civic 2021, Black',qr:'MPK-1002',qrStatus:'Active',plan:'Yearly',planPrice:4999,status:'Active',joined:'2026-11-08',lastScan:'2026-11-18 18:40'},
+      {id:3,name:'Bilal Ahmed',phone:'+92 333 9876543',plate:'LHR-23-9012',vehicle:'Suzuki Alto 2023, Silver',qr:'MPK-1003',qrStatus:'Active',plan:'Monthly',planPrice:499,status:'Active',joined:'2026-11-12',lastScan:'2026-11-19 09:02'},
+      {id:4,name:'Fatima Malik',phone:'+92 345 1122334',plate:'KHI-21-3456',vehicle:'Toyota Yaris 2020, Grey',qr:'MPK-1004',qrStatus:'Inactive',plan:'Monthly',planPrice:499,status:'Expired',joined:'2026-10-20',lastScan:'2026-11-05 14:20'},
+      {id:5,name:'Usman Tariq',phone:'+92 301 5566778',plate:'RWP-24-7890',vehicle:'Honda City 2022, Blue',qr:'MPK-1005',qrStatus:'Active',plan:'Monthly',planPrice:499,status:'Active',joined:'2026-11-15',lastScan:'2026-11-19 11:30'},
+      {id:6,name:'Sana Iqbal',phone:'+92 312 9988776',plate:'LEA-23-1122',vehicle:'Suzuki Swift 2021, Red',qr:'MPK-1006',qrStatus:'Active',plan:'Yearly',planPrice:4999,status:'Active',joined:'2026-11-05',lastScan:'2026-11-17 16:05'},
+      {id:7,name:'Hassan Ali',phone:'+92 344 3344556',plate:'ISB-24-6677',vehicle:'Kia Sportage 2023, White',qr:'MPK-1007',qrStatus:'Lost',plan:'Monthly',planPrice:499,status:'Blocked',joined:'2026-11-02',lastScan:'2026-11-11 08:45'},
+      {id:8,name:'Maryam Siddiqui',phone:'+92 300 6677889',plate:'LHR-22-3344',vehicle:'Toyota Fortuner 2022, Black',qr:'MPK-1008',qrStatus:'Active',plan:'Yearly',planPrice:4999,status:'Active',joined:'2026-11-18',lastScan:'2026-11-19 12:10'}
+    ],
+    batches: [
+      {id:'B-001',range:'MPK-1001 to MPK-1050',total:50,assigned:8,unassigned:42,status:'In use'},
+      {id:'B-002',range:'MPK-1051 to MPK-1100',total:50,assigned:0,unassigned:50,status:'Printed'}
+    ],
+    requests: [
+      {id:1,scanner:'Ali Nawaz',phone:'+92 300 9988776',plate:'LEA-24-1234',owner:'Ahmed Raza',reason:'Your car is blocking my driveway, please move it.',time:'2026-11-19 10:15',status:'Pending'},
+      {id:2,scanner:'Zainab Hussain',phone:'+92 321 4455667',plate:'ISB-22-5678',owner:'Ayesha Khan',reason:'Your car lights are on.',time:'2026-11-18 18:40',status:'Approved'},
+      {id:3,scanner:'Omar Farooq',phone:'+92 333 2211009',plate:'LHR-23-9012',owner:'Bilal Ahmed',reason:'Please move your car, double parked.',time:'2026-11-19 09:02',status:'Pending'},
+      {id:4,scanner:'Hira Shah',phone:'+92 345 7788990',plate:'RWP-24-7890',owner:'Usman Tariq',reason:'Emergency, your car is near a blocked exit.',time:'2026-11-19 11:30',status:'Pending'}
+    ],
+    notifications: [
+      {id:1,text:'New customer registered: Maryam Siddiqui, LHR-22-3344',time:'2026-11-18 15:20',read:false},
+      {id:2,text:'QR MPK-1001 scanned by Ali Nawaz',time:'2026-11-19 10:15',read:false},
+      {id:3,text:'Payment received: PKR 499 from Ahmed Raza, Monthly plan',time:'2026-11-10 12:00',read:false},
+      {id:4,text:'Subscription expiring soon: Fatima Malik, MPK-1004',time:'2026-11-17 09:00',read:true},
+      {id:5,text:'QR MPK-1007 reported lost by Hassan Ali',time:'2026-11-11 08:50',read:true},
+      {id:6,text:'New contact request for Bilal Ahmed, LHR-23-9012',time:'2026-11-19 09:02',read:false}
+    ],
+    plans: [
+      {id:'basic',name:'Basic',price:499,period:'Monthly',features:'1 vehicle, 1 QR sticker, Call and text owner'},
+      {id:'standard',name:'Standard',price:999,period:'Monthly',features:'2 vehicles, 2 QR stickers, Emergency contact, Priority alerts'},
+      {id:'premium',name:'Premium',price:9999,period:'Yearly',features:'5 vehicles, 5 QR stickers, Emergency contact, Priority alerts, Admin support'}
+    ],
+    settings: {business:'M-Park',phone:'+92 300 0000000',message:'This car is protected by M-Park. Scan to contact the owner.',otp:true,emergency:true}
+  };
+}
+var data;
+try { data = JSON.parse(localStorage.getItem(KEY)) || defaultData(); } catch(e) { data = defaultData(); }
+function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(function(){ t.style.display = 'none'; }, 3000); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function badge(status) {
+  if (status === 'Active' || status === 'Approved') return '<span class="badge green">' + status + '</span>';
+  if (status === 'Pending' || status === 'In use') return '<span class="badge amber">' + status + '</span>';
+  if (status === 'Expired' || status === 'Blocked' || status === 'Lost' || status === 'Ignored') return '<span class="badge red">' + status + '</span>';
+  if (status === 'Printed') return '<span class="badge blue">' + status + '</span>';
+  return '<span class="badge grey">' + status + '</span>';
+}
+var TITLES = {overview:['Overview','All users, vehicles, QR codes and subscriptions at a glance.'],customers:['Customers','Manage all registered customers, plans and status.'],vehicles:['Vehicles','Every vehicle registered through the Registration Portal.'],qrcodes:['QR Codes','One custom QR code for every customer.'],inventory:['QR Inventory','Sticker stock, batches, assigned and unassigned codes.'],requests:['Contact Requests','Requests from people who scanned a sticker.'],notifications:['Notifications','All system, scan and payment notifications.'],subscriptions:['Subscriptions','Demo plans in PKR. Edit prices, they save in this browser.'],settings:['Settings','Business, scan page and verification settings.']};
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item[data-page]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-page') === name); });
+  document.getElementById('pageTitle').textContent = TITLES[name][0];
+  document.getElementById('pageSub').textContent = TITLES[name][1];
+  document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo(0,0);
+}
+function renderOverview() {
+  var total = data.customers.length;
+  var activeQR = data.customers.filter(function(c){ return c.qrStatus === 'Active'; }).length;
+  var inactiveQR = total - activeQR;
+  var pending = data.requests.filter(function(r){ return r.status === 'Pending'; }).length;
+  document.getElementById('overviewStats').innerHTML =
+    '<div class="stat"><div class="num">' + total + '</div><div class="lbl">Total registered users</div><div class="sub good">+3 this week</div></div>' +
+    '<div class="stat"><div class="num">' + total + '</div><div class="lbl">Total registered vehicles</div><div class="sub good">1 vehicle per user in demo</div></div>' +
+    '<div class="stat"><div class="num">' + activeQR + '</div><div class="lbl">Active QR codes</div><div class="sub good">' + inactiveQR + ' inactive or lost</div></div>' +
+    '<div class="stat"><div class="num">' + pending + '</div><div class="lbl">Pending contact requests</div><div class="sub warn">Needs owner review</div></div>';
+  var regs = data.customers.slice().sort(function(a,b){ return b.joined.localeCompare(a.joined); }).slice(0,4);
+  document.getElementById('recentRegs').innerHTML = '<ul class="list">' + regs.map(function(c){ return '<li><b>' + c.name + '</b> - ' + c.plate + '<br><span class="muted small">' + c.vehicle + ' - Joined ' + c.joined + '</span></li>'; }).join('') + '</ul>';
+  document.getElementById('recentScans').innerHTML = '<ul class="list">' + data.requests.slice(0,4).map(function(r){ return '<li><b>' + r.scanner + '</b> scanned ' + r.plate + '<br><span class="muted small">' + r.reason + ' - ' + r.time + '</span></li>'; }).join('') + '</ul>';
+  var monthly = data.customers.filter(function(c){ return c.plan === 'Monthly'; }).length;
+  var yearly = data.customers.filter(function(c){ return c.plan === 'Yearly'; }).length;
+  document.getElementById('subSnapshot').innerHTML = '<p><b>' + monthly + '</b> Monthly subscribers, <b>' + yearly + '</b> Yearly subscribers. Demo monthly revenue: PKR ' + (monthly * 499 + yearly * 4999 / 12).toFixed(0) + ' approx per month.</p><p class="muted small">Prices are demo prices only. Confirm real prices with the client before launch.</p>';
+}
+function renderCustomers() {
+  var q = (document.getElementById('customerSearch').value || '').toLowerCase();
+  var f = document.getElementById('statusFilter').value;
+  var rows = data.customers.filter(function(c){
+    var okQ = !q || (c.name + ' ' + c.phone + ' ' + c.plate).toLowerCase().indexOf(q) !== -1;
+    var okF = !f || c.status === f;
+    return okQ && okF;
+  });
+  document.getElementById('customerRows').innerHTML = rows.map(function(c){
+    return '<tr><td><b>' + c.name + '</b><br><span class="muted small">' + c.phone + '</span></td><td>' + c.plate + '<br><span class="muted small">' + c.vehicle + '</span></td><td>' + c.qr + '<br>' + badge(c.qrStatus) + '</td><td>' + c.plan + '<br><span class="muted small">PKR ' + c.planPrice + '</span></td><td>' + badge(c.status) + '</td><td><button class="btn small secondary" onclick="viewCustomer(' + c.id + ')">View</button> <button class="btn small secondary" onclick="editCustomer(' + c.id + ')">Edit</button> <button class="btn small ' + (c.status === 'Blocked' ? '' : 'danger') + '" onclick="toggleBlock(' + c.id + ')">' + (c.status === 'Blocked' ? 'Unblock' : 'Block') + '</button></td></tr>';
+  }).join('') || '<tr><td colspan="6">No customers found.</td></tr>';
+  document.getElementById('customerCount').textContent = rows.length + ' of ' + data.customers.length + ' customers shown.';
+}
+function renderVehicles() {
+  document.getElementById('vehicleRows').innerHTML = data.customers.map(function(c){
+    return '<tr><td><b>' + c.plate + '</b></td><td>' + c.vehicle + '</td><td>' + c.name + '<br><span class="muted small">' + c.phone + '</span></td><td>' + c.qr + '</td><td>' + badge(c.qrStatus) + '</td></tr>';
+  }).join('');
+}
+function renderQRCodes() {
+  document.getElementById('qrRows').innerHTML = data.customers.map(function(c){
+    return '<tr><td><b>' + c.qr + '</b><br><span class="muted small">m-park.example/scan/' + c.qr + '</span></td><td>' + c.plate + '</td><td>' + c.name + '</td><td>' + badge(c.qrStatus) + '</td><td>' + c.lastScan + '</td><td><button class="btn small secondary" onclick="setQR(' + c.id + ',\'Active\')">Activate</button> <button class="btn small secondary" onclick="setQR(' + c.id + ',\'Inactive\')">Deactivate</button> <button class="btn small danger" onclick="setQR(' + c.id + ',\'Lost\')">Lost</button></td></tr>';
+  }).join('');
+}
+function renderInventory() {
+  var total = data.batches.reduce(function(s,b){ return s + b.total; }, 0);
+  var assigned = data.batches.reduce(function(s,b){ return s + b.assigned; }, 0);
+  var unassigned = total - assigned;
+  document.getElementById('inventoryStats').innerHTML =
+    '<div class="stat"><div class="num">' + total + '</div><div class="lbl">Total stickers in stock</div></div>' +
+    '<div class="stat"><div class="num">' + assigned + '</div><div class="lbl">Assigned</div></div>' +
+    '<div class="stat"><div class="num">' + unassigned + '</div><div class="lbl">Unassigned</div></div>' +
+    '<div class="stat"><div class="num">' + data.batches.length + '</div><div class="lbl">Batches</div></div>';
+  document.getElementById('inventoryRows').innerHTML = data.batches.map(function(b){
+    return '<tr><td><b>' + b.id + '</b></td><td>' + b.range + '</td><td>' + b.total + '</td><td>' + b.assigned + '</td><td>' + b.unassigned + '</td><td>' + badge(b.status) + '</td></tr>';
+  }).join('');
+}
+function renderRequests() {
+  document.getElementById('requestList').innerHTML = data.requests.map(function(r){
+    return '<div class="card" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><b>' + r.scanner + ' - ' + r.plate + '</b>' + badge(r.status) + '</div><p>' + r.reason + '</p><p class="muted small">Owner: ' + r.owner + ' - Scanner: ' + r.phone + ' - ' + r.time + '</p><div class="row"><button class="btn small" onclick="setRequest(' + r.id + ',\'Approved\')">Approve</button><button class="btn small secondary" onclick="setRequest(' + r.id + ',\'Ignored\')">Ignore</button></div></div>';
+  }).join('');
+}
+function renderNotifications() {
+  var unread = data.notifications.filter(function(n){ return !n.read; }).length;
+  document.getElementById('notificationList').innerHTML = '<p class="muted small">' + unread + ' unread notifications.</p>' + data.notifications.map(function(n){
+    return '<div class="card" style="margin-bottom:10px;opacity:' + (n.read ? '0.75' : '1') + '"><b>' + (n.read ? '' : '● ') + n.text + '</b><br><span class="muted small">' + n.time + '</span> <button class="btn small secondary" style="float:right" onclick="markRead(' + n.id + ')">Mark read</button></div>';
+  }).join('');
+}
+function renderSubscriptions() {
+  document.getElementById('planCards').innerHTML = data.plans.map(function(p){
+    return '<div class="card"><h2>' + p.name + ' - ' + p.period + '</h2><p class="muted small">' + p.features + '</p><label>Price in PKR</label><input type="number" id="price-' + p.id + '" value="' + p.price + '"><div class="space"></div><button class="btn" onclick="savePrice(\'' + p.id + '\')">Save price</button></div>';
+  }).join('');
+  var rows = data.plans.map(function(p){
+    var count = data.customers.filter(function(c){ return (p.period === 'Monthly' && c.plan === 'Monthly') || (p.period === 'Yearly' && c.plan === 'Yearly'); }).length;
+    return '<tr><td>' + p.name + '</td><td>' + p.period + '</td><td>PKR ' + p.price + '</td><td>' + count + ' demo subscribers (shared by period)</td></tr>';
+  }).join('');
+  document.getElementById('planTable').innerHTML = '<div class="table-wrap"><table><thead><tr><th>Plan</th><th>Period</th><th>Price</th><th>Subscribers</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+function renderAll() { renderOverview(); renderCustomers(); renderVehicles(); renderQRCodes(); renderInventory(); renderRequests(); renderNotifications(); renderSubscriptions(); }
+function viewCustomer(id) {
+  var c = data.customers.find(function(x){ return x.id === id; });
+  openModal('<h2>' + c.name + '</h2><dl class="kv"><dt>Phone</dt><dd>' + c.phone + '</dd><dt>Vehicle</dt><dd>' + c.vehicle + '</dd><dt>Plate</dt><dd>' + c.plate + '</dd><dt>QR Code</dt><dd>' + c.qr + ' - ' + c.qrStatus + '</dd><dt>Plan</dt><dd>' + c.plan + ' - PKR ' + c.planPrice + '</dd><dt>Status</dt><dd>' + c.status + '</dd><dt>Joined</dt><dd>' + c.joined + '</dd><dt>Last scan</dt><dd>' + c.lastScan + '</dd></dl><div class="row"><button class="btn secondary" onclick="closeModal()">Close</button><button class="btn" onclick="closeModal();editCustomer(' + c.id + ')">Edit</button></div>');
+}
+function editCustomer(id) {
+  var c = data.customers.find(function(x){ return x.id === id; });
+  openModal('<h2>Edit customer</h2><label>Name</label><input id="eName" value="' + c.name + '"><label>Phone</label><input id="ePhone" value="' + c.phone + '"><label>Plate</label><input id="ePlate" value="' + c.plate + '"><label>Vehicle</label><input id="eVehicle" value="' + c.vehicle + '"><label>Plan</label><select id="ePlan"><option ' + (c.plan === 'Monthly' ? 'selected' : '') + '>Monthly</option><option ' + (c.plan === 'Yearly' ? 'selected' : '') + '>Yearly</option></select><div class="space"></div><div class="row"><button class="btn" onclick="saveEdit(' + c.id + ')">Save changes</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>');
+}
+function saveEdit(id) {
+  var c = data.customers.find(function(x){ return x.id === id; });
+  c.name = document.getElementById('eName').value.trim() || c.name;
+  c.phone = document.getElementById('ePhone').value.trim() || c.phone;
+  c.plate = document.getElementById('ePlate').value.trim() || c.plate;
+  c.vehicle = document.getElementById('eVehicle').value.trim() || c.vehicle;
+  c.plan = document.getElementById('ePlan').value;
+  c.planPrice = c.plan === 'Yearly' ? 4999 : 499;
+  save(); closeModal(); renderAll(); toast('Customer saved.');
+}
+function openAddCustomer() {
+  openModal('<h2>Add customer</h2><label>Name</label><input id="aName" placeholder="Full name"><label>Phone</label><input id="aPhone" placeholder="+92 300 0000000"><label>Plate</label><input id="aPlate" placeholder="LEA-24-0000"><label>Vehicle</label><input id="aVehicle" placeholder="Toyota Corolla 2022, White"><label>Plan</label><select id="aPlan"><option>Monthly</option><option>Yearly</option></select><div class="space"></div><div class="row"><button class="btn" onclick="saveAdd()">Add customer</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>');
+}
+function saveAdd() {
+  var name = document.getElementById('aName').value.trim();
+  var phone = document.getElementById('aPhone').value.trim();
+  var plate = document.getElementById('aPlate').value.trim();
+  var vehicle = document.getElementById('aVehicle').value.trim();
+  if (!name || !phone || !plate) { toast('Please fill name, phone and plate.'); return; }
+  var nextQr = 1001 + data.customers.length;
+  var plan = document.getElementById('aPlan').value;
+  data.customers.push({id: Date.now(), name:name, phone:phone, plate:plate, vehicle: vehicle || 'Vehicle not set', qr:'MPK-' + nextQr, qrStatus:'Active', plan:plan, planPrice: plan === 'Yearly' ? 4999 : 499, status:'Active', joined:'2026-11-19', lastScan:'Not scanned yet'});
+  save(); closeModal(); renderAll(); toast('Customer added with QR MPK-' + nextQr + '.');
+}
+function toggleBlock(id) {
+  var c = data.customers.find(function(x){ return x.id === id; });
+  c.status = c.status === 'Blocked' ? 'Active' : 'Blocked';
+  save(); renderAll(); toast(c.name + ' is now ' + c.status + '.');
+}
+function setQR(id, status) {
+  var c = data.customers.find(function(x){ return x.id === id; });
+  c.qrStatus = status; save(); renderAll(); toast(c.qr + ' is now ' + status + '.');
+}
+function generateBatch() {
+  var n = data.batches.length + 1;
+  var start = 1101 + (n - 3) * 50;
+  if (n < 3) start = 1101;
+  var end = start + 49;
+  data.batches.push({id:'B-00' + n, range:'MPK-' + start + ' to MPK-' + end, total:50, assigned:0, unassigned:50, status:'Printed'});
+  save(); renderInventory(); toast('New batch B-00' + n + ' generated: 50 demo QR codes.');
+}
+function setRequest(id, status) {
+  var r = data.requests.find(function(x){ return x.id === id; });
+  r.status = status; save(); renderAll(); toast('Request ' + status.toLowerCase() + '.');
+}
+function markRead(id) { var n = data.notifications.find(function(x){ return x.id === id; }); n.read = true; save(); renderNotifications(); }
+function markAllRead() { data.notifications.forEach(function(n){ n.read = true; }); save(); renderNotifications(); toast('All notifications marked as read.'); }
+function savePrice(pid) {
+  var p = data.plans.find(function(x){ return x.id === pid; });
+  var v = parseInt(document.getElementById('price-' + pid).value, 10);
+  if (!v || v <= 0) { toast('Please enter a valid price.'); return; }
+  p.price = v; save(); renderSubscriptions(); toast(p.name + ' price saved: PKR ' + v + '.');
+}
+function saveSettings() {
+  data.settings.business = document.getElementById('setBusiness').value.trim();
+  data.settings.phone = document.getElementById('setPhone').value.trim();
+  data.settings.message = document.getElementById('setMessage').value.trim();
+  data.settings.otp = document.getElementById('setOtp').checked;
+  data.settings.emergency = document.getElementById('setEmergency').checked;
+  save(); document.getElementById('settingsSaved').textContent = 'Settings saved in this browser.'; toast('Settings saved.');
+}
+function resetDemo() { if (confirm('Reset all demo data? This clears your changes in this browser.')) { localStorage.removeItem(KEY); data = defaultData(); save(); renderAll(); toast('Demo data reset.'); } }
+function openModal(html) { document.getElementById('modalBox').innerHTML = html; document.getElementById('modalBackdrop').classList.add('open'); }
+function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }
+document.getElementById('modalBackdrop').addEventListener('click', function(e){ if (e.target === this) closeModal(); });
+document.getElementById('setBusiness').value = data.settings.business;
+document.getElementById('setPhone').value = data.settings.phone;
+document.getElementById('setMessage').value = data.settings.message;
+document.getElementById('setOtp').checked = data.settings.otp;
+document.getElementById('setEmergency').checked = data.settings.emergency;
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M-Park Customer Dashboard</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="topbar"><b>M-Park Customer</b><button type="button" onclick="toggleSidebar()">Menu</button></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-logo">MP</div><div><b>M-Park</b><span>Customer Dashboard</span></div></div>
+    <div class="nav-label">Customer</div>
+    <button class="nav-item active" data-page="overview" onclick="showPage('overview')"><span class="ico">◈</span> Overview</button>
+    <button class="nav-item" data-page="vehicle" onclick="showPage('vehicle')"><span class="ico">🚗</span> My Vehicle</button>
+    <button class="nav-item" data-page="sticker" onclick="showPage('sticker')"><span class="ico">▦</span> My QR Sticker</button>
+    <button class="nav-item" data-page="notifications" onclick="showPage('notifications')"><span class="ico">🔔</span> Notifications</button>
+    <button class="nav-item" data-page="requests" onclick="showPage('requests')"><span class="ico">✉</span> Contact Requests</button>
+    <button class="nav-item" data-page="emergency" onclick="showPage('emergency')"><span class="ico">＋</span> Emergency Contact</button>
+    <div class="nav-label">Links</div>
+    <button class="nav-item" onclick="location.href='../index.html'"><span class="ico">⌂</span> Home</button>
+    <button class="nav-item" onclick="location.href='../admin/index.html'"><span class="ico">→</span> Admin Dashboard</button>
+    <div class="sidebar-foot">Logged in as<br><b style="color:#fff">Ahmed Raza</b><br>+92 300 1234567<br><br><span class="demo-badge">Demo Data</span></div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head"><div><span class="demo-badge">Demo Data - No real payments or SMS</span><h1 id="pageTitle">Welcome back, Ahmed</h1><p class="muted" id="pageSub">Your vehicle, QR sticker, and contact requests in one place.</p></div><button class="btn secondary" onclick="resetDemo()">Reset demo data</button></div>
+
+    <section class="page active" id="page-overview">
+      <div class="grid grid-4" id="overviewStats"></div>
+      <div class="space"></div>
+      <div class="grid grid-2">
+        <div class="card"><h2>My vehicle</h2><div id="overviewVehicle"></div><p><button class="btn secondary" onclick="showPage('vehicle')">View vehicle details</button></p></div>
+        <div class="card"><h2>Latest contact request</h2><div id="latestRequest"></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-vehicle">
+      <div class="card"><h2>Registered vehicle details</h2><div id="vehicleDetails"></div>
+        <h3 style="margin-top:20px">Edit vehicle</h3>
+        <label>Plate number</label><input id="vPlate">
+        <label>Vehicle</label><input id="vVehicle">
+        <label>Phone number</label><input id="vPhone">
+        <div class="space"></div><button class="btn" onclick="saveVehicle()">Save vehicle details</button>
+      </div>
+    </section>
+
+    <section class="page" id="page-sticker">
+      <div class="grid grid-2">
+        <div class="card qr-box">
+          <h2>My QR sticker</h2>
+          <img id="qrImage" src="../assets/img/qr-mpk-1001.png" alt="M-Park QR code MPK-1001">
+          <p><b>MPK-1001</b> <span class="badge green">Active</span></p>
+          <p class="muted small">Scan URL: https://m-park.example/scan/MPK-1001</p>
+          <div class="row" style="justify-content:center"><a class="btn" href="../assets/img/qr-mpk-1001.png" download="qr-mpk-1001.png">Download QR</a><button class="btn secondary" onclick="window.print()">Print sticker</button></div>
+        </div>
+        <div class="card"><h2>Sticker information</h2><div id="stickerInfo"></div><h3>How to use it</h3><ol class="small"><li>Print the QR and stick it on the inside of your windscreen.</li><li>Anyone who needs your car to move can scan it.</li><li>They verify with OTP, then they can call or text you.</li><li>Your number is not shown openly before OTP verification.</li></ol></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-notifications">
+      <div class="card"><div class="toolbar"><h2 style="margin:0;flex:1">Received notifications</h2><button class="btn secondary" onclick="markAllRead()">Mark all as read</button></div><div id="notificationList"></div></div>
+    </section>
+
+    <section class="page" id="page-requests">
+      <div class="card"><h2>Contact requests</h2><p class="muted small">People who scanned your sticker. Approve to share your contact, or Ignore to decline.</p><div id="requestList"></div></div>
+    </section>
+
+    <section class="page" id="page-emergency">
+      <div class="grid grid-2">
+        <div class="card"><h2>Emergency contact</h2><p class="muted small">This contact is used only if someone reports an emergency about your car.</p><div id="emergencySaved"></div></div>
+        <div class="card"><h2>Add or edit emergency contact</h2>
+          <label>Contact name</label><input id="ecName" placeholder="Full name">
+          <label>Relation</label><input id="ecRelation" placeholder="Brother, wife, friend">
+          <label>Phone number</label><input id="ecPhone" placeholder="+92 300 0000000">
+          <label>Note (optional)</label><input id="ecNote" placeholder="Call after 9 pm only">
+          <div class="space"></div>
+          <button class="btn" onclick="saveEmergency()">Save emergency contact</button>
+          <button class="btn secondary" onclick="deleteEmergency()">Remove</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var KEY = 'mpark_customer_v1';
+function defaultData() {
+  return {
+    customer: {name:'Ahmed Raza', phone:'+92 300 1234567', plate:'LEA-24-1234', vehicle:'Toyota Corolla 2022, White', qr:'MPK-1001', qrStatus:'Active', plan:'Monthly', planPrice:499, validTill:'2026-12-10', joined:'2026-11-10'},
+    emergency: {name:'Bilal Raza', relation:'Brother', phone:'+92 333 9876543', note:'Call if I do not answer in 10 minutes.'},
+    requests: [
+      {id:1,scanner:'Ali Nawaz',phone:'+92 300 9988776',reason:'Your car is blocking my driveway, please move it.',time:'2026-11-19 10:15',status:'Pending'},
+      {id:2,scanner:'Zainab Hussain',phone:'+92 321 4455667',reason:'Your car lights are on.',time:'2026-11-18 18:40',status:'Approved'},
+      {id:3,scanner:'Omar Farooq',phone:'+92 333 2211009',reason:'Please move your car, double parked.',time:'2026-11-19 09:02',status:'Pending'}
+    ],
+    notifications: [
+      {id:1,text:'New contact request from Ali Nawaz for LEA-24-1234',time:'2026-11-19 10:15',read:false},
+      {id:2,text:'Your Monthly subscription is active until 2026-12-10',time:'2026-11-10 12:00',read:false},
+      {id:3,text:'Your QR sticker MPK-1001 was activated',time:'2026-11-10 11:30',read:true},
+      {id:4,text:'Contact request from Zainab Hussain was approved',time:'2026-11-18 18:45',read:true}
+    ]
+  };
+}
+var data;
+try { data = JSON.parse(localStorage.getItem(KEY)) || defaultData(); } catch(e) { data = defaultData(); }
+function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(function(){ t.style.display = 'none'; }, 3000); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function badge(status) {
+  if (status === 'Active' || status === 'Approved') return '<span class="badge green">' + status + '</span>';
+  if (status === 'Pending') return '<span class="badge amber">' + status + '</span>';
+  return '<span class="badge grey">' + status + '</span>';
+}
+var TITLES = {overview:['Welcome back, Ahmed','Your vehicle, QR sticker, and contact requests in one place.'],vehicle:['My Vehicle','Your registered vehicle details.'],sticker:['My QR Sticker','Your custom QR sticker for this vehicle.'],notifications:['Notifications','Notifications you received from M-Park.'],requests:['Contact Requests','People who scanned your sticker.'],emergency:['Emergency Contact','Manage who to contact in an emergency.']};
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item[data-page]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-page') === name); });
+  document.getElementById('pageTitle').textContent = TITLES[name][0];
+  document.getElementById('pageSub').textContent = TITLES[name][1];
+  document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo(0,0);
+}
+function renderAll() {
+  var pending = data.requests.filter(function(r){ return r.status === 'Pending'; }).length;
+  var unread = data.notifications.filter(function(n){ return !n.read; }).length;
+  document.getElementById('overviewStats').innerHTML =
+    '<div class="stat"><div class="num">1</div><div class="lbl">Registered vehicle</div><div class="sub good">' + data.customer.plate + '</div></div>' +
+    '<div class="stat"><div class="num">' + data.customer.qr + '</div><div class="lbl">QR sticker</div><div class="sub good">' + data.customer.qrStatus + '</div></div>' +
+    '<div class="stat"><div class="num">' + pending + '</div><div class="lbl">Pending contact requests</div><div class="sub warn">Needs your review</div></div>' +
+    '<div class="stat"><div class="num">' + unread + '</div><div class="lbl">Unread notifications</div><div class="sub good">' + data.customer.plan + ' till ' + data.customer.validTill + '</div></div>';
+  document.getElementById('overviewVehicle').innerHTML = '<dl class="kv"><dt>Plate</dt><dd>' + data.customer.plate + '</dd><dt>Vehicle</dt><dd>' + data.customer.vehicle + '</dd><dt>Plan</dt><dd>' + data.customer.plan + ' - PKR ' + data.customer.planPrice + '</dd><dt>Valid till</dt><dd>' + data.customer.validTill + '</dd></dl>';
+  var latest = data.requests[0];
+  document.getElementById('latestRequest').innerHTML = '<p><b>' + latest.scanner + '</b> ' + badge(latest.status) + '</p><p>' + latest.reason + '</p><p class="muted small">' + latest.time + ' - ' + latest.phone + '</p><p><button class="btn secondary" onclick="showPage(\'requests\')">View all requests</button></p>';
+  document.getElementById('vehicleDetails').innerHTML = '<dl class="kv"><dt>Owner</dt><dd>' + data.customer.name + '</dd><dt>Phone</dt><dd>' + data.customer.phone + '</dd><dt>Plate</dt><dd>' + data.customer.plate + '</dd><dt>Vehicle</dt><dd>' + data.customer.vehicle + '</dd><dt>QR Code</dt><dd>' + data.customer.qr + ' - ' + data.customer.qrStatus + '</dd><dt>Plan</dt><dd>' + data.customer.plan + ' - PKR ' + data.customer.planPrice + '</dd><dt>Valid till</dt><dd>' + data.customer.validTill + '</dd><dt>Joined</dt><dd>' + data.customer.joined + '</dd></dl>';
+  document.getElementById('vPlate').value = data.customer.plate;
+  document.getElementById('vVehicle').value = data.customer.vehicle;
+  document.getElementById('vPhone').value = data.customer.phone;
+  document.getElementById('stickerInfo').innerHTML = '<dl class="kv"><dt>QR Code</dt><dd>' + data.customer.qr + '</dd><dt>Status</dt><dd>' + data.customer.qrStatus + '</dd><dt>Vehicle</dt><dd>' + data.customer.plate + ' - ' + data.customer.vehicle + '</dd><dt>Scan URL</dt><dd>https://m-park.example/scan/' + data.customer.qr + '</dd><dt>Printed</dt><dd>2026-11-10</dd></dl>';
+  document.getElementById('notificationList').innerHTML = data.notifications.map(function(n){
+    return '<div class="card" style="margin-bottom:10px;opacity:' + (n.read ? '0.75' : '1') + '"><b>' + (n.read ? '' : '● ') + n.text + '</b><br><span class="muted small">' + n.time + '</span> <button class="btn small secondary" style="float:right" onclick="markRead(' + n.id + ')">Mark read</button></div>';
+  }).join('');
+  document.getElementById('requestList').innerHTML = data.requests.map(function(r){
+    return '<div class="card" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><b>' + r.scanner + ' - ' + r.phone + '</b>' + badge(r.status) + '</div><p>' + r.reason + '</p><p class="muted small">' + r.time + '</p><div class="row"><button class="btn small" onclick="setRequest(' + r.id + ',\'Approved\')">Approve</button><button class="btn small secondary" onclick="setRequest(' + r.id + ',\'Ignored\')">Ignore</button></div></div>';
+  }).join('');
+  renderEmergency();
+}
+function renderEmergency() {
+  var e = data.emergency;
+  if (!e || !e.name) { document.getElementById('emergencySaved').innerHTML = '<p class="muted">No emergency contact saved yet. Add one on the right.</p>'; return; }
+  document.getElementById('emergencySaved').innerHTML = '<dl class="kv"><dt>Name</dt><dd>' + e.name + '</dd><dt>Relation</dt><dd>' + e.relation + '</dd><dt>Phone</dt><dd>' + e.phone + '</dd><dt>Note</dt><dd>' + (e.note || 'None') + '</dd></dl>';
+  document.getElementById('ecName').value = e.name;
+  document.getElementById('ecRelation').value = e.relation;
+  document.getElementById('ecPhone').value = e.phone;
+  document.getElementById('ecNote').value = e.note || '';
+}
+function saveVehicle() {
+  data.customer.plate = document.getElementById('vPlate').value.trim() || data.customer.plate;
+  data.customer.vehicle = document.getElementById('vVehicle').value.trim() || data.customer.vehicle;
+  data.customer.phone = document.getElementById('vPhone').value.trim() || data.customer.phone;
+  save(); renderAll(); toast('Vehicle details saved.');
+}
+function saveEmergency() {
+  var name = document.getElementById('ecName').value.trim();
+  var phone = document.getElementById('ecPhone').value.trim();
+  if (!name || !phone) { toast('Please fill emergency contact name and phone.'); return; }
+  data.emergency = {name:name, relation:document.getElementById('ecRelation').value.trim(), phone:phone, note:document.getElementById('ecNote').value.trim()};
+  save(); renderAll(); toast('Emergency contact saved.');
+}
+function deleteEmergency() {
+  if (!confirm('Remove your emergency contact?')) return;
+  data.emergency = null; save(); renderEmergency();
+  document.getElementById('ecName').value = ''; document.getElementById('ecRelation').value = ''; document.getElementById('ecPhone').value = ''; document.getElementById('ecNote').value = '';
+  toast('Emergency contact removed.');
+}
+function setRequest(id, status) { var r = data.requests.find(function(x){ return x.id === id; }); r.status = status; save(); renderAll(); toast('Request ' + status.toLowerCase() + '.'); }
+function markRead(id) { var n = data.notifications.find(function(x){ return x.id === id; }); n.read = true; save(); renderAll(); }
+function markAllRead() { data.notifications.forEach(function(n){ n.read = true; }); save(); renderAll(); toast('All notifications marked as read.'); }
+function resetDemo() { if (confirm('Reset all demo data? This clears your changes in this browser.')) { localStorage.removeItem(KEY); data = defaultData(); save(); renderAll(); toast('Demo data reset.'); } }
+renderAll();
+</script>
+</body>
+</html>
