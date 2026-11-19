@@ -1,0 +1,159 @@
+// M-Park Prisma schema.
+// SQLite for local development. For production Postgres, change provider to
+// "postgresql" and set DATABASE_URL to the Postgres connection string, then
+// run a new migration. No other model change is needed.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum QrStatus {
+  ACTIVE
+  INACTIVE
+  LOST
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  IGNORED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  role          Role           @default(CUSTOMER)
+  name          String
+  phone         String         @unique
+  email         String?        @unique
+  passwordHash  String?
+  isBlocked     Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  vehicles      Vehicle[]
+  subscriptions Subscription[]
+  notifications Notification[]
+  emergency     EmergencyContact?
+}
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  plate       String   @unique
+  make        String
+  model       String
+  year        Int
+  color       String
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  qrCodes     QrCode[]
+  requests    ContactRequest[]
+  scans       ScanLog[]
+}
+
+model QrCode {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  batch      String
+  status     QrStatus @default(ACTIVE)
+  vehicleId  String?
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
+  printedAt  DateTime @default(now())
+  assignedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model SubscriptionPlan {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  pricePkr      Int
+  durationMonths Int
+  description   String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId    String
+  plan      SubscriptionPlan   @relation(fields: [planId], references: [id])
+  startDate DateTime           @default(now())
+  endDate   DateTime
+  status    SubscriptionStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  purpose   String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ContactRequest {
+  id          String        @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  scannerName String
+  scannerPhone String
+  message     String
+  status      RequestStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ScanLog {
+  id           String   @id @default(cuid())
+  vehicleId    String
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  scannerName  String?
+  scannerPhone String?
+  verified     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model EmergencyContact {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String
+  relationship String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

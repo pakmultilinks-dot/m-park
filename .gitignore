@@ -1,0 +1,11 @@
+# Local database (SQLite file). Never commit a real database.
+*.db
+*.db-journal
+node_modules
+.next
+out
+.env
+.env.local
+.DS_Store
+
+next-env.d.ts

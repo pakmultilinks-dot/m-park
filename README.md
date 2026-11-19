@@ -1,63 +1,53 @@
-# M-Park - Customer and Admin Dashboards
+# M-Park - Real SaaS
 
-Contribution branch: `contribution/customer-admin-dashboards`
-Main branch is untouched. The owner will merge to main himself.
+M-Park is a real SaaS for QR sticker parking. This branch is `contribution/proper-saas`, a proper app: Next.js App Router, TypeScript, Tailwind CSS, Prisma database, real auth, real OTP flow, real QR scan, and real subscriptions in PKR.
 
-## What this build contains
+This is not the old static HTML demo. That demo stays on branch `contribution/customer-admin-dashboards`. Main does not exist yet. The user merges this branch to main himself.
 
-This is a static web app, no build step. Open it in a browser or deploy it on Vercel as a static site.
+## What is in this app
 
-- `index.html`: chooser for Customer Dashboard and Admin Dashboard, with the M-Park flow explained.
-- `admin/index.html`: Admin Dashboard for the single owner of M-Park.
-- `customer/index.html`: Customer Dashboard for a car owner.
-- `assets/css/style.css`: shared styles.
+- `/` - Landing chooser
+- `/register` - Vehicle registration with QR verification and mobile OTP verification
+- `/scan/[code]` - Real scan page. Looks up the QR code in the database, asks the scanner for name and phone, verifies OTP, then shows Call Owner, Text Owner, and Emergency Contact. Logs the scan and creates a ContactRequest and a Notification for the customer.
+- `/login` - Admin login with email and password, customer login with phone and OTP
+- `/customer` - Customer Dashboard C: Overview, My Vehicle, My QR Sticker (real QR image generated from the scan URL), Notifications, Contact Requests (Approve/Ignore), Emergency Contact management
+- `/admin` - Admin Dashboard D: Overview totals, Customers, Vehicles, QR Codes, QR Inventory (generate new batch of real codes in the database), Contact Requests, Notifications monitoring, Subscriptions and Plans
 
-## C. Customer Dashboard
+## Run locally
 
-- Overview: vehicle, QR status, pending requests, unread notifications, plan validity
-- My Vehicle: registered vehicle details, edit plate, vehicle and phone, saves in the browser
-- My QR Sticker: QR image for MPK-1001, bundled locally as assets/img/qr-mpk-1001.png so it loads without an external service, scan URL https://m-park.example/scan/MPK-1001, download and print
-- Notifications: received notifications, mark as read, mark all as read
-- Contact Requests: Approve or Ignore requests from people who scanned the sticker
-- Emergency Contact: add, edit, or remove an emergency contact, saves in the browser
-
-Demo customer: Ahmed Raza, +92 300 1234567, LEA-24-1234, Toyota Corolla 2022, White, QR MPK-1001, Monthly PKR 499.
-
-## D. Admin Dashboard
-
-- Overview: total registered users, total registered vehicles, active QR codes, inactive QR codes, recent registrations, recent scans, subscription snapshot
-- Customers: searchable table, view, edit, block and unblock, subscription status, add customer
-- Vehicles: all registered vehicles with owner and QR code
-- QR Codes: all codes, Activate, Deactivate, Mark Lost
-- QR Inventory: batches, total stock, assigned and unassigned counts, Generate new batch adds 50 demo codes
-- Contact Requests: Approve or Ignore
-- Notifications: monitoring, mark as read, mark all as read
-- Subscriptions: demo plans in PKR, edit and save prices in the browser
-- Settings: business name, support phone, scan page message, OTP and emergency contact toggles
-
-Demo plans, prices are placeholders until the client confirms real prices:
-- Basic, Monthly, PKR 499
-- Standard, Monthly, PKR 999
-- Premium, Yearly, PKR 9999
-
-## Demo data
-
-All data is demo data only. It is stored in the browser with localStorage, keys `mpark_admin_v1` and `mpark_customer_v1`. Use Reset demo data in either dashboard to restore the original demo data.
-
-There is no backend, no real database, no real SMS or OTP service, and no real payment in this build.
-
-## How to run locally
-
-```bash
-python3 -m http.server 8000
+```
+cp .env.example .env
+npm install
+npx prisma migrate dev --name init
+npm run seed
+npm run dev
 ```
 
-Then open http://localhost:8000/
+Open http://localhost:3000
 
-## How to deploy on Vercel
+Seeded test accounts, from `prisma/seed.ts` only:
+- Admin: admin@m-park.example / Admin1234! - change this password before launch
+- Customer: +92 300 1234567, login with phone and OTP (dev OTP is shown on screen in dev mode only)
+- Seeded unassigned QR codes for registration: MPK-1009 to MPK-1050, MPK-1051 to MPK-1100
+- Seeded plans: Basic Monthly PKR 499, Standard Monthly PKR 999, Premium Yearly PKR 9999
 
-Import this repo in Vercel as a static site, no build command, no output directory change needed. The root `index.html` is the entry page.
+## Database
 
-## Scope note
+Prisma with SQLite for local development. The file is `prisma/dev.db`, created by migrate, and is git ignored. For production Postgres, change `provider` in `prisma/schema.prisma` to `postgresql`, set `DATABASE_URL` to the Postgres connection string, and run a new migration.
 
-Landing Page (A) and Registration Portal (B) are not in this branch. Only Customer Dashboard (C) and Admin Dashboard (D) are built here, as confirmed by the user on 19 Nov 2026.
+## OTP and SMS
+
+OTP codes are 6 digits, expire in 10 minutes, max 5 attempts, stored as a SHA-256 hash in the `OtpCode` table. `src/lib/sms.ts` is a pluggable sender. With no provider configured, the OTP is logged to the server console and, in dev mode only, shown on screen labelled as a dev code.
+
+Still needed from the client to go live:
+- SMS provider and keys, for example Twilio, or a Pakistan SMS gateway. Set `SMS_PROVIDER` and its keys in `.env`.
+- Payment provider and merchant keys, for example JazzCash or Easypaisa, or Stripe. Set `PAYMENT_PROVIDER` and its keys in `.env`. Subscriptions are currently created on registration and by the admin, online payment is not wired yet.
+- A production `SESSION_SECRET`, a production `DATABASE_URL`, and `NEXT_PUBLIC_BASE_URL` set to the live domain, so QR scan links point to the live site.
+- Change the seeded admin password, and decide the real subscription prices with the client.
+
+## Build
+
+```
+npm run build
+npm run start
+```
