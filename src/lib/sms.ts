@@ -1,9 +1,8 @@
-// SMS sender stub. No real SMS is sent until the client gives a real provider.
-// Supported when configured: Twilio via env keys. Add your Pakistan gateway
-// (JazzCash, Easypaisa, or a local SMS gateway) by adding a branch here and
-// its keys to .env.example. In development, with no provider configured,
-// the OTP is logged to the server console and, only in dev mode, returned
-// to the screen labelled as a dev code. That is not a production flow.
+// SMS sender. Supported when configured: Twilio via env keys. Add a Pakistan
+// SMS gateway by adding a branch here and its keys to .env.example.
+// In development, with no provider configured, the OTP is logged to the
+// server console and, only in dev mode, returned to the screen labelled
+// as a development code. That is not a production flow.
 
 export async function sendSms(phone: string, message: string): Promise<{ sent: boolean; provider: string; note: string }> {
   const provider = process.env.SMS_PROVIDER || "";

@@ -16,7 +16,7 @@ export default async function Home() {
             <Link href="/order" className="btn-primary">Order Now - {product ? `PKR ${product.pricePkr}` : "QR sticker"}</Link>
             <Link href="/login" className="bg-white text-green-950 font-semibold px-4 py-2 rounded-lg">Login</Link>
           </div>
-          <p className="text-green-200 text-xs mt-3">QR sticker price to be confirmed with the client. Buy the sticker, pay, register your vehicle, and the sticker is permanently linked to your vehicle.</p>
+          <p className="text-green-200 text-xs mt-3">Buy the sticker, pay, register your vehicle, and the sticker is permanently linked to your vehicle.</p>
         </div>
       </header>
       <section className="max-w-5xl mx-auto px-6 py-12">
@@ -54,7 +54,7 @@ export default async function Home() {
           <p className="text-slate-600 text-sm mt-2">The vehicle owner personal mobile number is never shown publicly. Communication happens only through the M-Park secure system. Messages are delivered instantly and anonymously. Your identity is protected. M-Park never shares your number or personal data with the vehicle owner.</p>
         </div>
         <h2 className="text-2xl font-bold mt-10">Choose a dashboard</h2>
-        <p className="text-slate-600 mt-2">This is the real M-Park app. Data is stored in the database, not in the browser.</p>
+        <p className="text-slate-600 mt-2">Manage your vehicle, QR sticker, and contact requests from your dashboard.</p>
         <div className="grid md:grid-cols-2 gap-4 mt-5">
           <div className="card">
             <h3 className="font-bold text-lg">Customer Dashboard</h3>
@@ -67,7 +67,7 @@ export default async function Home() {
             <Link href="/login?role=admin" className="btn-primary mt-4">Open Admin Dashboard</Link>
           </div>
         </div>
-        <p className="text-slate-500 text-sm mt-8">To try a scan, use a seeded QR code, for example MPK-1009 for LEK 7982, Grey Suzuki Cultus, at /scan/MPK-1009 after the database is seeded. Future vision: AI-based parking detection, smart parking, vehicle alerts, and fleet management.</p>
+        <p className="text-slate-500 text-sm mt-8">Future vision: AI-based parking detection, smart parking, vehicle alerts, and fleet management.</p>
       </section>
     </main>
   );

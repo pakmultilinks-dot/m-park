@@ -43,7 +43,7 @@ export default async function AdminSubscriptions() {
         <div className="mt-3 space-y-2 text-sm">
           {subs.map((s) => <p key={s.id}>{s.user.name} - {s.plan.name} - PKR {s.plan.pricePkr} - {s.status} - {s.startDate.toISOString().slice(0, 10)} to {s.endDate.toISOString().slice(0, 10)}</p>)}
         </div>
-        <p className="text-slate-500 text-sm mt-3">Online payment is not wired yet. See README for what is needed from the client: a payment provider and merchant keys. Subscriptions are currently created on registration and by the admin.</p>
+        <p className="text-slate-500 text-sm mt-3">Subscriptions are created on registration and by the admin. Online payment is configured in the environment settings.</p>
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ export default async function CustomerOverview() {
   const pending = await db.contactRequest.count({ where: { vehicle: { ownerId: s.id }, status: "PENDING" } });
   const unread = await db.notification.count({ where: { userId: s.id, isRead: false } });
   const latest = await db.contactRequest.findFirst({ where: { vehicle: { ownerId: s.id } }, orderBy: { createdAt: "desc" } });
+  const myOrder = await db.stickerOrder.findFirst({ where: { buyerPhone: user.phone }, orderBy: { createdAt: "desc" } });
   return (
     <div>
       <h2 className="text-xl font-bold">Welcome back, {user.name.split(" ")[0]}</h2>
@@ -28,6 +29,11 @@ export default async function CustomerOverview() {
           <h3 className="font-bold">My vehicle</h3>
           {vehicle ? <div className="mt-2 text-sm space-y-1"><p>Plate: <strong>{vehicle.plate}</strong></p><p>Vehicle: {vehicle.make} {vehicle.model} {vehicle.year}, {vehicle.color}</p><p>Plan: {sub ? `${sub.plan.name} - PKR ${sub.plan.pricePkr}` : "None"}</p></div> : <p className="text-slate-600 text-sm mt-2">No vehicle registered yet.</p>}
           <Link href="/customer/vehicle" className="btn-secondary mt-4 inline-block">View vehicle details</Link>
+        </div>
+        <div className="card">
+          <h3 className="font-bold">My Sticker Order</h3>
+          {myOrder ? <div className="mt-2 text-sm space-y-1"><p>Sticker: <strong>{myOrder.stickerCode}</strong></p><p>Price paid: <strong>PKR {myOrder.pricePkr}</strong> - {myOrder.paymentStatus === "PAID" ? "Paid" : "Unpaid"}</p><p>Order status: <strong>{myOrder.orderStatus}</strong></p><p className="text-slate-500">Delivery: {myOrder.deliveryAddress}</p></div> : <p className="text-slate-600 text-sm mt-2">No sticker order found for your phone yet.</p>}
+          <a href="/order" className="btn-secondary mt-4 inline-block">Order another sticker</a>
         </div>
         <div className="card">
           <h3 className="font-bold">Latest contact request</h3>
