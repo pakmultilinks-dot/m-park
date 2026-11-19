@@ -149,6 +149,36 @@ export async function customerRequestAction(requestId: string, status: "APPROVED
   revalidatePath("/customer");
 }
 
+export async function adminOrderPayment(form: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(form.get("id") || "");
+  const paymentStatus = String(form.get("paymentStatus") || "") as "PAID" | "UNPAID";
+  if (!id || (paymentStatus !== "PAID" && paymentStatus !== "UNPAID")) throw new Error("Order and payment status are required.");
+  await db.stickerOrder.update({ where: { id }, data: { paymentStatus } });
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+}
+
+export async function adminOrderStatus(form: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(form.get("id") || "");
+  const orderStatus = String(form.get("orderStatus") || "") as "ORDERED" | "PRINTED" | "SHIPPED" | "DELIVERED" | "ACTIVATED";
+  if (!id || !["ORDERED", "PRINTED", "SHIPPED", "DELIVERED", "ACTIVATED"].includes(orderStatus)) throw new Error("Order and order status are required.");
+  await db.stickerOrder.update({ where: { id }, data: { orderStatus } });
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+}
+
+export async function adminProductPrice(form: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(form.get("id") || "");
+  const pricePkr = Number(form.get("pricePkr") || 0);
+  if (!id || pricePkr <= 0) throw new Error("A price above 0 is required.");
+  await db.product.update({ where: { id }, data: { pricePkr } });
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+}
+
 export async function markNotificationsRead(): Promise<void> {
   const s = await getSession();
   if (!s) return;

@@ -11,14 +11,18 @@ export default async function AdminOverview() {
   const recentUsers = await db.user.findMany({ where: { role: "CUSTOMER" }, include: { vehicles: true }, orderBy: { createdAt: "desc" }, take: 5 });
   const recentScans = await db.scanLog.findMany({ include: { vehicle: true }, orderBy: { createdAt: "desc" }, take: 5 });
   const activeSubs = await db.subscription.count({ where: { status: "ACTIVE" } });
+  const paidOrders = await db.stickerOrder.findMany({ where: { paymentStatus: "PAID" } });
+  const stickersSold = paidOrders.length;
+  const stickerRevenue = paidOrders.reduce((sum, o) => sum + o.pricePkr, 0);
   return (
     <div>
       <p className="text-slate-600">All users, vehicles, QR codes and subscriptions at a glance. Data comes from the database.</p>
-      <div className="grid md:grid-cols-4 gap-4 mt-5">
+      <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4 mt-5">
         <div className="card"><p className="text-3xl font-bold">{totalUsers}</p><p className="text-slate-600 text-sm">Total registered users</p></div>
         <div className="card"><p className="text-3xl font-bold">{totalVehicles}</p><p className="text-slate-600 text-sm">Total registered vehicles</p></div>
         <div className="card"><p className="text-3xl font-bold">{activeQr}</p><p className="text-slate-600 text-sm">Active QR codes</p><p className="text-slate-500 text-sm">{inactiveQr} inactive or lost</p></div>
         <div className="card"><p className="text-3xl font-bold">{pendingRequests}</p><p className="text-slate-600 text-sm">Pending contact requests</p><p className="text-slate-500 text-sm">{activeSubs} active subscriptions</p></div>
+        <div className="card"><p className="text-3xl font-bold">{stickersSold}</p><p className="text-slate-600 text-sm">QR stickers sold (paid)</p><p className="text-slate-500 text-sm">PKR {stickerRevenue} revenue from sticker sales</p></div>
       </div>
       <div className="grid md:grid-cols-2 gap-4 mt-5">
         <div className="card">

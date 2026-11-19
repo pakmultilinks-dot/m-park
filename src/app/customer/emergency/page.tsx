@@ -9,7 +9,7 @@ export default async function CustomerEmergency() {
   return (
     <div className="card max-w-lg">
       <h2 className="font-bold text-lg">Emergency contact</h2>
-      <p className="text-slate-600 text-sm">This contact is shown to a verified scanner after OTP, so they can reach someone if you do not answer.</p>
+      <p className="text-slate-600 text-sm">Your emergency contact number is never shown on the scan page. If a scanner sends an alert, M-Park also notifies this contact through the secure system.</p>
       <form action={customerEmergencyUpsert} className="space-y-4 mt-4">
         <div><label className="label">Name</label><input className="input" name="name" defaultValue={contact?.name || ""} required /></div>
         <div><label className="label">Phone</label><input className="input" name="phone" defaultValue={contact?.phone || ""} required /></div>

@@ -4,6 +4,7 @@ import Shell from "@/components/Shell";
 
 const LINKS = [
   { href: "/customer", label: "Overview" },
+  { href: "/customer/orders", label: "My Sticker Order" },
   { href: "/customer/vehicle", label: "My Vehicle" },
   { href: "/customer/qr", label: "My QR Sticker" },
   { href: "/customer/notifications", label: "Notifications" },

@@ -35,6 +35,9 @@ export async function POST(req: Request) {
   else if (user.name !== name) await db.user.update({ where: { id: user.id }, data: { name } });
   const vehicle = await db.vehicle.create({ data: { plate, make, model, year, color, ownerId: user.id } });
   await db.qrCode.update({ where: { id: qr.id }, data: { vehicleId: vehicle.id, status: "ACTIVE", assignedAt: new Date() } });
+  // If this QR code was bought in a sticker order, the sticker is now
+  // permanently linked to this vehicle. Mark that order Activated.
+  await db.stickerOrder.updateMany({ where: { stickerCode: code }, data: { orderStatus: "ACTIVATED", userId: user.id, vehicleId: vehicle.id } });
   const start = new Date();
   const end = new Date(start);
   end.setMonth(end.getMonth() + plan.durationMonths);

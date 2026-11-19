@@ -17,6 +17,9 @@ const customers = [
   { name: "Sana Iqbal", phone: "+92 312 9988776", plate: "LEA-23-1122", make: "Suzuki", model: "Swift", year: 2021, color: "Red", code: "MPK-1006", plan: "Premium Yearly", emergency: { name: "Nida Iqbal", phone: "+92 312 6655443", relationship: "Sister" } },
   { name: "Hassan Ali", phone: "+92 344 3344556", plate: "ISB-24-6677", make: "Kia", model: "Sportage", year: 2023, color: "White", code: "MPK-1007", plan: "Basic Monthly", emergency: { name: "Amina Ali", phone: "+92 344 7788990", relationship: "Mother" } },
   { name: "Maryam Siddiqui", phone: "+92 300 6677889", plate: "LHR-22-3344", make: "Toyota", model: "Fortuner", year: 2022, color: "Black", code: "MPK-1008", plan: "Premium Yearly", emergency: { name: "Bilal Siddiqui", phone: "+92 300 1122334", relationship: "Husband" } },
+  // Vehicle from the client reference video: LEK 7982, Grey Suzuki Cultus.
+  // Test owner name only, from the video TikTok handle, replace with the real owner when confirmed.
+  { name: "Mudassir Ahmed", phone: "+92 300 1112233", plate: "LEK 7982", make: "Suzuki", model: "Cultus", year: 2021, color: "Grey", code: "MPK-1009", plan: "Basic Monthly", emergency: { name: "Ayesha Ahmed", phone: "+92 300 4445566", relationship: "Wife" } },
 ];
 
 async function main() {
@@ -25,11 +28,13 @@ async function main() {
   await db.notification.deleteMany();
   await db.otpCode.deleteMany();
   await db.subscription.deleteMany();
+  await db.stickerOrder.deleteMany();
   await db.qrCode.deleteMany();
   await db.vehicle.deleteMany();
   await db.emergencyContact.deleteMany();
   await db.user.deleteMany();
   await db.subscriptionPlan.deleteMany();
+  await db.product.deleteMany();
 
   const adminHash = await bcrypt.hash("Admin1234!", 10);
   await db.user.create({
@@ -61,7 +66,7 @@ async function main() {
     void vehicle;
   }
 
-  // QR inventory: batch B-001, MPK-1001 to MPK-1050, first 8 assigned.
+  // QR inventory: batch B-001, MPK-1001 to MPK-1050, first 9 assigned.
   const vehicles = await db.vehicle.findMany({ orderBy: { plate: "asc" } });
   const vehicleByCode: Record<string, string> = {};
   customers.forEach((c) => {
@@ -77,6 +82,24 @@ async function main() {
   }
   for (let n = 1051; n <= 1100; n++) {
     await db.qrCode.create({ data: { code: `MPK-${n}`, batch: "B-002", status: "ACTIVE", vehicleId: null } });
+  }
+
+  // The product being sold: the M-Park QR sticker. Demo price, to be
+  // confirmed with the client. The price lives in the database.
+  const sticker = await db.product.create({ data: { name: "M-Park QR Sticker", pricePkr: 999, description: "Round blue QR sticker for the car windscreen. Permanently linked to one vehicle after registration." } });
+
+  // Sample sticker sales, linked to real seeded customers and QR codes.
+  const ahmedUserSeed = await db.user.findFirst({ where: { phone: "+92 300 1234567" } });
+  const ayeshaUserSeed = await db.user.findFirst({ where: { phone: "+92 321 7654321" } });
+  const qr1001 = await db.qrCode.findUnique({ where: { code: "MPK-1001" } });
+  const qr1002 = await db.qrCode.findUnique({ where: { code: "MPK-1002" } });
+  const ahmedVehicleSeed = vehicles.find((v) => v.plate === "LEA-24-1234");
+  const ayeshaVehicleSeed = vehicles.find((v) => v.plate === "ISB-22-5678");
+  if (ahmedUserSeed && qr1001 && ahmedVehicleSeed) {
+    await db.stickerOrder.create({ data: { buyerName: "Ahmed Raza", buyerPhone: "+92 300 1234567", deliveryAddress: "Lahore", plate: "LEA-24-1234", stickerCode: "MPK-1001", pricePkr: sticker.pricePkr, paymentStatus: "PAID", paymentMethod: "JazzCash", orderStatus: "ACTIVATED", userId: ahmedUserSeed.id, vehicleId: ahmedVehicleSeed.id, qrCodeId: qr1001.id } });
+  }
+  if (ayeshaUserSeed && qr1002 && ayeshaVehicleSeed) {
+    await db.stickerOrder.create({ data: { buyerName: "Ayesha Khan", buyerPhone: "+92 321 7654321", deliveryAddress: "Islamabad", plate: "ISB-22-5678", stickerCode: "MPK-1002", pricePkr: sticker.pricePkr, paymentStatus: "PAID", paymentMethod: "Easypaisa", orderStatus: "DELIVERED", userId: ayeshaUserSeed.id, vehicleId: ayeshaVehicleSeed.id, qrCodeId: qr1002.id } });
   }
 
   // Sample contact requests and scans, linked to real seeded vehicles.
@@ -95,7 +118,7 @@ async function main() {
 
   console.log("Seed done. Admin login: admin@m-park.example / Admin1234!");
   console.log("Seed done. Customer login: phone + OTP, for example +92 300 1234567");
-  console.log("Seed done. 8 customers, 8 vehicles, 100 QR codes in 2 batches, 3 plans.");
+  console.log("Seed done. 9 customers, 9 vehicles, 100 QR codes in 2 batches, 3 plans, 1 sticker product, 2 sticker orders.");
 }
 
 main().then(() => db.$disconnect()).catch((e) => { console.error(e); process.exit(1); });

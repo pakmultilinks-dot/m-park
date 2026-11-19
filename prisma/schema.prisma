@@ -34,6 +34,56 @@ enum RequestStatus {
   IGNORED
 }
 
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum OrderStatus {
+  ORDERED
+  PRINTED
+  SHIPPED
+  DELIVERED
+  ACTIVATED
+}
+
+// The product being sold: the M-Park QR sticker itself. Its price lives in
+// the database, not in hardcoded text, and the admin can change it.
+model Product {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  pricePkr    Int
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// A QR sticker sale. This is the core M-Park business: the customer buys a
+// sticker, pays, then registers a vehicle and the sticker is permanently
+// linked to that vehicle until ownership or registration changes.
+model StickerOrder {
+  id              String        @id @default(cuid())
+  buyerName       String
+  buyerPhone      String
+  buyerEmail      String?
+  deliveryAddress String
+  plate           String?
+  stickerCode     String        @unique
+  pricePkr        Int
+  paymentStatus   PaymentStatus @default(UNPAID)
+  paymentMethod   String?
+  orderStatus     OrderStatus   @default(ORDERED)
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id])
+  vehicleId       String?
+  vehicle         Vehicle?      @relation(fields: [vehicleId], references: [id])
+  qrCodeId        String?       @unique
+  qrCode          QrCode?       @relation(fields: [qrCodeId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
 model User {
   id            String         @id @default(cuid())
   role          Role           @default(CUSTOMER)
@@ -48,6 +98,7 @@ model User {
   subscriptions Subscription[]
   notifications Notification[]
   emergency     EmergencyContact?
+  stickerOrders StickerOrder[]
 }
 
 model Vehicle {
@@ -64,19 +115,21 @@ model Vehicle {
   qrCodes     QrCode[]
   requests    ContactRequest[]
   scans       ScanLog[]
+  stickerOrders StickerOrder[]
 }
 
 model QrCode {
-  id         String   @id @default(cuid())
-  code       String   @unique
-  batch      String
-  status     QrStatus @default(ACTIVE)
-  vehicleId  String?
-  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
-  printedAt  DateTime @default(now())
-  assignedAt DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String        @id @default(cuid())
+  code         String        @unique
+  batch        String
+  status       QrStatus      @default(ACTIVE)
+  vehicleId    String?
+  vehicle      Vehicle?      @relation(fields: [vehicleId], references: [id])
+  printedAt    DateTime      @default(now())
+  assignedAt   DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  stickerOrder StickerOrder?
 }
 
 model SubscriptionPlan {

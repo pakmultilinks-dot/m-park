@@ -1,0 +1,28 @@
+import Link from "next/link";
+import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+
+export default async function CustomerOrders() {
+  const s = await getSession();
+  if (!s) return null;
+  const orders = await db.stickerOrder.findMany({ where: { buyerPhone: s.phone }, orderBy: { createdAt: "desc" } });
+  return (
+    <div>
+      <h2 className="text-xl font-bold">My Sticker Orders</h2>
+      <p className="text-slate-600">Your QR sticker purchases, price paid, order status and delivery status.</p>
+      <div className="space-y-4 mt-5">
+        {orders.length === 0 && <p className="text-slate-600">No sticker orders yet.</p>}
+        {orders.map((o) => (
+          <div key={o.id} className="card">
+            <p className="font-bold">Sticker {o.stickerCode} - PKR {o.pricePkr}</p>
+            <p className="text-slate-600 text-sm mt-1">Payment: {o.paymentStatus === "PAID" ? "Paid" : "Unpaid"}{o.paymentMethod ? ` by ${o.paymentMethod}` : ""}</p>
+            <p className="text-slate-600 text-sm">Order status: <strong>{o.orderStatus}</strong></p>
+            <p className="text-slate-600 text-sm">Delivery: {o.deliveryAddress}</p>
+            <p className="text-slate-500 text-sm">Ordered {o.createdAt.toISOString().slice(0, 10)}</p>
+          </div>
+        ))}
+      </div>
+      <Link href="/order" className="btn-primary mt-5 inline-block">Order another sticker</Link>
+    </div>
+  );
+}
