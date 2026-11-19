@@ -1,0 +1,14 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+// Light guard only. Real session checks run in each layout with getSession().
+export function middleware(req: NextRequest) {
+  const token = req.cookies.get("mpark_session")?.value;
+  if (!token) {
+    const role = req.nextUrl.pathname.startsWith("/admin") ? "admin" : "customer";
+    return NextResponse.redirect(new URL(`/login?role=${role}`, req.url));
+  }
+  return NextResponse.next();
+}
+
+export const config = { matcher: ["/admin/:path*", "/customer/:path*"] };
